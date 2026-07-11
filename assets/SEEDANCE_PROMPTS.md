@@ -5,8 +5,21 @@ procedural. When your credits reset, generate any of these as **seamless loops**
 written to match the site's phases), drop the resulting `.mp4` into this `/assets` folder,
 and tell me the filename — I'll wire it in as a `THREE.VideoTexture` overlay.
 
-Model: **Seedance 2.0** (fallback **Seedance 1.5 Pro** if 2.0 is plan-gated). Aspect **16:9**,
-loopable, dark background, ~4–6s.
+Model: **Seedance 2.0** (fallback **Seedance 1.5 Pro** if 2.0 is plan-gated).
+Settings: **1080p · 6s · 16:9 · H.264 .mp4 · dark background**.
+
+**Save each clip with its phase filename in this folder** so wiring is automatic:
+
+| # | Phase | Filename |
+|---|-------|----------|
+| 1 | CRYSTAL     | `crystal.mp4` |
+| 2 | MELT        | `melt.mp4` |
+| 3 | VAPOR       | `vapor.mp4` |
+| 4 | THE TURN    | `turn.mp4` |
+| 5 | SINGULARITY | `singularity.mp4` |
+
+Seamless looping is handled in code (crossfade/ping-pong) — the raw 6s clips don't
+need to loop perfectly.
 
 ---
 
