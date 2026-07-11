@@ -66,9 +66,11 @@ export class Scene {
     this.videos = {};        // name -> {el, tex}
     this._activeVid = null;
     const sources = {
-      crystal:'assets/crystal.mp4',
-      melt:   'assets/melt.mp4',
-      vapor:  'assets/vapor.mp4'
+      crystal:    'assets/crystal.mp4',
+      melt:       'assets/melt.mp4',
+      vapor:      'assets/vapor.mp4',
+      turn:       'assets/turn.mp4',
+      singularity:'assets/singularity.mp4'
     };
     for(const [name,src] of Object.entries(sources)){
       const el = document.createElement('video');

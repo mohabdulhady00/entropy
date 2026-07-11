@@ -128,6 +128,22 @@ phaseEls.forEach((ph,i)=>{
   });
 });
 
+/* ---------------- video → section anchoring ---------------- */
+// which clip belongs to which phase index (1 = fracture stays procedural)
+const CLIP_FOR_PHASE = { 0:'crystal', 2:'melt', 3:'vapor', 4:'turn', 5:'singularity' };
+let phaseVid = [];
+function computePhaseVid(){
+  const limit = lenis.limit || (document.documentElement.scrollHeight - window.innerHeight) || 1;
+  const vh = window.innerHeight;
+  phaseVid = phaseEls.map((el,i)=>{
+    const name = CLIP_FOR_PHASE[i];
+    if(!name) return null;
+    const top = el.offsetTop, h = el.offsetHeight;
+    const centerScroll = clamp(top + h/2 - vh/2, 0, limit);
+    return { name, center: centerScroll/limit, band: Math.max(0.05, (h*0.5)/limit) };
+  });
+}
+
 /* ---------------- pointer ---------------- */
 const pointer = { x:0, y:0, tx:0, ty:0 };
 window.addEventListener('pointermove', e=>{
@@ -179,15 +195,15 @@ function frame(){
   const turnAngle = -Math.PI/2 * smoothstep(0.70,0.86,p) * (1 - smoothstep(0.90,0.965,p));
   const camZ = 7 - 0.4*smoothstep(0.20,0.70,p) + 0.7*smoothstep(0.90,1.0,p);
 
-  // ---- generated-video layer: pick active clip + opacity (disjoint windows) ----
+  // ---- generated-video layer: each clip anchored to its own DOM section ----
+  // opacity peaks at the section centre and hits 0 before the neighbour → no bleed
   const VID_CAP = 0.85;
-  const vidOps = {
-    crystal: (1 - smoothstep(0.09,0.17,p)),
-    melt:    smoothstep(0.30,0.40,p) * (1 - smoothstep(0.50,0.56,p)),
-    vapor:   smoothstep(0.58,0.64,p) * (1 - smoothstep(0.74,0.82,p))
-  };
   let vidName=null, vidOpacity=0;
-  for(const k in vidOps){ if(vidOps[k] > vidOpacity){ vidOpacity=vidOps[k]; vidName=k; } }
+  for(let i=0;i<phaseVid.length;i++){
+    const r = phaseVid[i]; if(!r) continue;         // fracture has no clip
+    const op = 1 - smoothstep(0, r.band, Math.abs(p - r.center));
+    if(op > vidOpacity){ vidOpacity = op; vidName = r.name; }
+  }
   vidOpacity *= VID_CAP;
 
   // ---- physics control ----
@@ -233,7 +249,7 @@ gsap.ticker.add(frame);
 let rt;
 window.addEventListener('resize',()=>{
   three.resize();
-  clearTimeout(rt); rt=setTimeout(()=>ScrollTrigger.refresh(),160);
+  clearTimeout(rt); rt=setTimeout(()=>{ ScrollTrigger.refresh(); computePhaseVid(); },160);
 });
 
 /* ---------------- preloader ---------------- */
@@ -255,6 +271,7 @@ function boot(){
       lenis.scrollTo(0,{immediate:true});
       playIntro();
       ScrollTrigger.refresh();
+      computePhaseVid();
     }
   };
   requestAnimationFrame(tick);
