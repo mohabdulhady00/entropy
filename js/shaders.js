@@ -109,6 +109,28 @@ void main(){
 }
 `;
 
+/* -------- VIDEO LAYER (additive, cover-fit) -------- */
+export const VID_VERT = /* glsl */`
+varying vec2 vUv;
+void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }
+`;
+export const VID_FRAG = /* glsl */`
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D uTex;
+uniform float uOpacity, uCanvasAspect, uVidAspect;
+void main(){
+  // cover-fit the 16:9 clip into any viewport
+  vec2 uv = vUv;
+  if(uCanvasAspect > uVidAspect) uv.y = (uv.y-0.5)*(uVidAspect/uCanvasAspect)+0.5;
+  else                           uv.x = (uv.x-0.5)*(uCanvasAspect/uVidAspect)+0.5;
+  if(uv.x<0.0||uv.x>1.0||uv.y<0.0||uv.y>1.0){ gl_FragColor=vec4(0.0); return; }
+  vec3 c = texture2D(uTex, uv).rgb;
+  // clips are on pure black -> additive means only the matter glows in
+  gl_FragColor = vec4(c * uOpacity, 1.0);
+}
+`;
+
 /* -------- CENTRAL FORM (crystal -> liquid) -------- */
 export const OBJ_VERT = /* glsl */`
 uniform float uTime, uMelt, uVel, uEntropy;

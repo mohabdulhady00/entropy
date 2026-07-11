@@ -10,6 +10,5 @@ desktop.ini
 # Logs
 *.log
 
-# Generated media dropped in later (keep the prompts, ignore heavy mp4s)
-assets/*.mp4
-assets/*.mov
+# Heavy source clips (originals). Optimized web clips in assets/ ARE committed.
+assets/_src/

@@ -179,6 +179,17 @@ function frame(){
   const turnAngle = -Math.PI/2 * smoothstep(0.70,0.86,p) * (1 - smoothstep(0.90,0.965,p));
   const camZ = 7 - 0.4*smoothstep(0.20,0.70,p) + 0.7*smoothstep(0.90,1.0,p);
 
+  // ---- generated-video layer: pick active clip + opacity (disjoint windows) ----
+  const VID_CAP = 0.85;
+  const vidOps = {
+    crystal: (1 - smoothstep(0.09,0.17,p)),
+    melt:    smoothstep(0.30,0.40,p) * (1 - smoothstep(0.50,0.56,p)),
+    vapor:   smoothstep(0.58,0.64,p) * (1 - smoothstep(0.74,0.82,p))
+  };
+  let vidName=null, vidOpacity=0;
+  for(const k in vidOps){ if(vidOps[k] > vidOpacity){ vidOpacity=vidOps[k]; vidName=k; } }
+  vidOpacity *= VID_CAP;
+
   // ---- physics control ----
   if(p < 0.10){ physics.reassemble(); }
   else if(p < 0.62 && !physics._shattered && (p > 0.18 || velRaw > 0.22)){
@@ -205,6 +216,7 @@ function frame(){
     time, entropy:p, vel:velSmooth,
     melt, objAlpha, objScale, disperse, collapse,
     fragAlpha, fragScale:1, turnAngle, camZ,
+    vidName, vidOpacity,
     pointer
   });
 

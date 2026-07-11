@@ -5,7 +5,7 @@
    ============================================================ */
 import * as THREE from 'three';
 import {
-  BG_VERT, BG_FRAG, OBJ_VERT, OBJ_FRAG, PT_VERT, PT_FRAG
+  BG_VERT, BG_FRAG, OBJ_VERT, OBJ_FRAG, PT_VERT, PT_FRAG, VID_VERT, VID_FRAG
 } from './shaders.js';
 
 export class Scene {
@@ -35,6 +35,7 @@ export class Scene {
     this._tmpPos  = new THREE.Vector3();
 
     this._buildBackground();
+    this._buildVideoLayer();
     this._buildLights();
     this._buildForm();
     this._buildParticles();
@@ -58,6 +59,60 @@ export class Scene {
       uniforms:this.bgUniforms, depthWrite:false, depthTest:false
     });
     this.bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat));
+  }
+
+  /* ---------- optional generated-video layer (additive) ---------- */
+  _buildVideoLayer(){
+    this.videos = {};        // name -> {el, tex}
+    this._activeVid = null;
+    const sources = {
+      crystal:'assets/crystal.mp4',
+      melt:   'assets/melt.mp4',
+      vapor:  'assets/vapor.mp4'
+    };
+    for(const [name,src] of Object.entries(sources)){
+      const el = document.createElement('video');
+      el.src = src; el.loop = true; el.muted = true; el.playsInline = true;
+      el.preload = 'auto'; el.crossOrigin = 'anonymous';
+      el.setAttribute('playsinline',''); el.setAttribute('muted','');
+      const tex = new THREE.VideoTexture(el);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter;
+      this.videos[name] = { el, tex, ready:false };
+      el.addEventListener('loadeddata', ()=>{ this.videos[name].ready = true; }, {once:true});
+      el.addEventListener('error', ()=>{ this.videos[name].error = true; }, {once:true});
+    }
+    this.vidUniforms = {
+      uTex:{value:null}, uOpacity:{value:0}, uCanvasAspect:{value:1}, uVidAspect:{value:16/9}
+    };
+    const mat = new THREE.ShaderMaterial({
+      vertexShader:VID_VERT, fragmentShader:VID_FRAG, uniforms:this.vidUniforms,
+      transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending
+    });
+    this.videoQuad = new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat);
+    this.videoQuad.renderOrder = 1;   // over the shader bg, under the 3D scene
+    this.videoQuad.visible = false;
+    this.bgScene.add(this.videoQuad);
+  }
+
+  // called each frame: pick which clip is active + its opacity
+  setVideoPhase(name, opacity){
+    if(opacity < 0.01 || !name){
+      this.videoQuad.visible = false;
+      if(this._activeVid && this.videos[this._activeVid]) this.videos[this._activeVid].el.pause();
+      this._activeVid = null;
+      return;
+    }
+    const v = this.videos[name];
+    if(!v || v.error){ this.videoQuad.visible = false; return; }
+    if(this._activeVid !== name){
+      if(this._activeVid && this.videos[this._activeVid]) this.videos[this._activeVid].el.pause();
+      this._activeVid = name;
+      this.vidUniforms.uTex.value = v.tex;
+      const p = v.el.play(); if(p && p.catch) p.catch(()=>{});
+    }
+    this.videoQuad.visible = true;
+    this.vidUniforms.uOpacity.value = opacity;
   }
 
   _buildLights(){
@@ -189,6 +244,9 @@ export class Scene {
     // fragments (physics-driven)
     this._syncFragments(s.fragAlpha, s.fragScale);
 
+    // optional generated-video layer
+    this.setVideoPhase(s.vidName, s.vidOpacity);
+
     // camera: parallax + roll (THE TURN) + dolly
     this.camera.position.x += (s.pointer.x*0.7 - this.camera.position.x)*0.05;
     this.camera.position.y += (s.pointer.y*0.5 - this.camera.position.y)*0.05;
@@ -210,6 +268,7 @@ export class Scene {
     this.camera.aspect = w/h;
     this.camera.updateProjectionMatrix();
     this.bgUniforms.uAspect.value = w/h;
+    this.vidUniforms.uCanvasAspect.value = w/h;
     this.ptUniforms.uPix.value = this._dpr * h/2;
   }
 }
