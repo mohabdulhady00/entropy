@@ -1,0 +1,244 @@
+/* ============================================================
+   ENTROPY — A Surreal Physics Playground
+   Art direction: editorial-brutalist, near-black void, one
+   liquid accent that shifts hue with disorder.
+   ============================================================ */
+
+:root{
+  --bg:#05060a;
+  --bg-2:#0a0c14;
+  --ink:#f3f1ea;
+  --ink-dim:#8b8f9c;
+  --ink-faint:#4b4f5c;
+  --line:rgba(243,241,234,.12);
+  --accent:#c8ff4d;          /* driven live by JS (hue shifts) */
+  --accent-soft:rgba(200,255,77,.16);
+  --serif:"Instrument Serif", Georgia, serif;
+  --sans:"Space Grotesk", system-ui, sans-serif;
+  --ease:cubic-bezier(.7,0,.2,1);
+  --pad:clamp(20px,4vw,64px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-weight:300;
+  line-height:1.5;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  cursor:default;
+}
+a{color:inherit;text-decoration:none}
+em{font-style:italic}
+::selection{background:var(--accent);color:#05060a}
+
+/* Lenis */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+
+/* ---------- WEBGL CANVAS ---------- */
+#gl{
+  position:fixed;inset:0;
+  width:100vw;height:100vh;height:100dvh;
+  display:block;z-index:0;
+  pointer-events:none;
+}
+
+/* film grain */
+#grain{
+  position:fixed;inset:-50%;z-index:2;pointer-events:none;
+  opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 6s steps(6) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}10%{transform:translate(-4%,-4%)}
+  30%{transform:translate(3%,-2%)}50%{transform:translate(-2%,3%)}
+  70%{transform:translate(4%,2%)}90%{transform:translate(-3%,4%)}
+  100%{transform:translate(0,0)}
+}
+
+/* ---------- PRELOADER ---------- */
+#preloader{
+  position:fixed;inset:0;z-index:100;
+  background:var(--bg);
+  display:grid;place-items:center;
+  transition:opacity .8s var(--ease),visibility .8s;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none}
+.pre-inner{width:min(340px,72vw);text-align:center}
+.pre-mark{
+  font-family:var(--serif);font-size:clamp(30px,7vw,46px);
+  letter-spacing:.14em;margin-bottom:22px;
+  font-style:italic;color:var(--ink);
+}
+.pre-bar{height:1px;background:var(--line);position:relative;overflow:hidden}
+.pre-bar span{
+  position:absolute;inset:0 100% 0 0;background:var(--accent);
+  transition:right .2s linear;
+}
+.pre-meta{
+  display:flex;justify-content:space-between;
+  margin-top:14px;font-size:11px;letter-spacing:.24em;color:var(--ink-dim);
+}
+
+/* ---------- CHROME ---------- */
+.chrome{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:22px var(--pad);
+  mix-blend-mode:difference;
+  pointer-events:none;
+}
+.chrome a{pointer-events:auto}
+.chrome-left{display:flex;align-items:baseline;gap:10px}
+.logo{font-weight:700;letter-spacing:.18em;font-size:15px}
+.logo-sub{font-size:11px;letter-spacing:.2em;color:var(--ink-dim);font-weight:400}
+.chrome-nav{display:flex;gap:clamp(10px,1.6vw,22px)}
+.chrome-nav a{
+  font-size:12px;letter-spacing:.16em;color:var(--ink-dim);
+  position:relative;padding:2px 0;transition:color .3s;
+}
+.chrome-nav a:hover,.chrome-nav a.active{color:var(--ink)}
+.chrome-nav a.active::after{
+  content:"";position:absolute;left:0;right:0;bottom:-3px;height:1px;background:currentColor;
+}
+
+/* ---------- ENTROPY METER ---------- */
+.meter{
+  position:fixed;left:var(--pad);bottom:26px;z-index:20;
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;letter-spacing:.22em;color:var(--ink-dim);
+  mix-blend-mode:difference;
+}
+.meter-label{white-space:nowrap}
+.meter-track{
+  width:clamp(90px,16vw,190px);height:2px;background:var(--line);position:relative;
+}
+.meter-track span{
+  position:absolute;left:0;top:0;bottom:0;width:0%;
+  background:var(--accent);box-shadow:0 0 14px var(--accent);
+}
+.meter-val{min-width:40px;color:var(--ink)}
+.meter-state{
+  color:var(--accent);font-weight:500;min-width:64px;
+  transition:color .4s;
+}
+
+/* ---------- SCROLL HINT ---------- */
+.scroll-hint{
+  position:fixed;right:var(--pad);bottom:28px;z-index:20;
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;letter-spacing:.24em;color:var(--ink-dim);
+  mix-blend-mode:difference;transition:opacity .5s;
+}
+.scroll-hint.hide{opacity:0}
+.scroll-hint-line{width:44px;height:1px;background:var(--line);position:relative;overflow:hidden}
+.scroll-hint-line i{
+  position:absolute;top:0;left:0;height:100%;width:40%;background:var(--ink);
+  animation:hintmove 1.8s var(--ease) infinite;
+}
+@keyframes hintmove{0%{left:-40%}100%{left:100%}}
+
+/* ---------- CONTENT / PHASES ---------- */
+#scroll-content{position:relative;z-index:10}
+.phase{
+  position:relative;
+  min-height:100vh;min-height:100dvh;
+  padding:14vh var(--pad);
+  display:flex;flex-direction:column;justify-content:center;
+  max-width:1400px;margin:0 auto;
+}
+/* extra breathing room so scrub timelines have travel */
+#crystal{min-height:130vh}
+#fracture,#melt,#vapor{min-height:200vh}
+#turn{min-height:220vh}
+#singularity{min-height:150vh}
+
+.phase-tag{
+  font-size:12px;letter-spacing:.28em;color:var(--accent);
+  margin-bottom:26px;display:flex;align-items:center;gap:10px;
+}
+.phase-tag span{
+  color:var(--ink);border:1px solid var(--line);
+  padding:3px 8px;border-radius:2px;font-size:11px;
+}
+
+/* headings */
+.hero-title,.phase-title{
+  font-weight:300;letter-spacing:-.02em;line-height:.98;
+  font-size:clamp(44px,10vw,148px);
+  max-width:15ch;
+}
+.phase-title.big{font-size:clamp(48px,12vw,180px)}
+.hero-title em,.phase-title em{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  color:var(--accent);
+}
+.line{display:block;overflow:hidden}
+.line > *{display:inline-block;will-change:transform}
+
+.hero-lede,.phase-copy{
+  margin-top:30px;max-width:44ch;
+  font-size:clamp(15px,1.5vw,19px);color:var(--ink-dim);
+  line-height:1.65;font-weight:300;
+}
+
+/* smoke words (vapor) get per-word spans via JS */
+[data-smoke] .word{display:inline-block;will-change:transform,filter,opacity}
+
+/* THE TURN visual container */
+.turn-stage{position:relative}
+.turn-title em{color:var(--accent)}
+
+/* CTA */
+.cta{
+  margin-top:48px;display:inline-flex;align-items:center;gap:14px;
+  align-self:flex-start;
+  padding:16px 26px;border:1px solid var(--line);border-radius:100px;
+  font-size:13px;letter-spacing:.16em;color:var(--ink);
+  background:rgba(243,241,234,.02);pointer-events:auto;
+  transition:border-color .4s,background .4s,color .4s,gap .4s;
+  cursor:pointer;
+}
+.cta:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);gap:20px}
+.cta svg{transition:transform .5s var(--ease)}
+.cta:hover svg{transform:rotate(-90deg)}
+
+.site-foot{
+  margin-top:16vh;display:flex;flex-direction:column;gap:6px;
+  font-size:12px;letter-spacing:.14em;color:var(--ink-faint);
+}
+.site-foot span:first-child{color:var(--ink-dim);font-weight:500;letter-spacing:.2em}
+
+.noscript{position:fixed;inset:0;display:grid;place-items:center;padding:40px;text-align:center;z-index:200;background:var(--bg)}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:760px){
+  :root{--pad:18px}
+  .logo-sub{display:none}
+  .chrome-nav{gap:12px}
+  .chrome-nav a{font-size:11px}
+  .scroll-hint{display:none}
+  .meter-label{display:none}
+  .hero-title,.phase-title{font-size:clamp(38px,13vw,64px);max-width:100%}
+  .phase-title.big{font-size:clamp(42px,15vw,72px)}
+  .hero-lede,.phase-copy{max-width:100%}
+  #fracture,#melt,#vapor{min-height:170vh}
+  #turn{min-height:180vh}
+}
+@media (max-width:420px){
+  .chrome-nav a:nth-child(n+4){display:none}
+}
+
+/* ---------- REDUCED MOTION ---------- */
+@media (prefers-reduced-motion:reduce){
+  #grain,.scroll-hint-line i{animation:none}
+  *{scroll-behavior:auto!important}
+}

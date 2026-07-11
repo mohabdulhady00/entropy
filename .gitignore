@@ -1,0 +1,15 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Generated media dropped in later (keep the prompts, ignore heavy mp4s)
+assets/*.mp4
+assets/*.mov
